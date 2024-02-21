@@ -35,7 +35,27 @@
         <button type="button" onclick="saveRepeatTimes()">Save</button>
     </div>
 
+    <h1>HID Report Generator</h1>
+    <form id="hidReportForm">
+        <label for="inputString">Input String:</label>
+        <input type="text" id="inputString" name="input_string" placeholder="Enter string">
+        <button type="button" onclick="generateHIDReport()">Generate HID Report</button>
+    </form>
+
     <script>
+        function generateHIDReport() {
+            var inputString = document.getElementById("inputString").value;
+            fetch('/generate_hid_report', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'input_string': inputString
+                }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+        }
+
         function addItem() {
             var itemInput = document.getElementById("itemInput");
             var item = itemInput.value.trim();

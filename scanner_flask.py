@@ -1,7 +1,13 @@
 from flask import Flask, render_template, request, jsonify
 import json
-
+import time
 app = Flask(__name__)
+
+NULL_CHAR = chr(0)
+# Define the function to send the HID report
+def write_report(report):
+    with open('/dev/hidg0', 'rb+') as fd:
+        fd.write(report.encode())
 
 def save_items(filename, items):
     with open(filename, 'w') as f:
@@ -36,6 +42,31 @@ repeat_times_min, repeat_times_max = load_settings("repeat_times_settings.txt")
 def index():
     return render_template('index.html', items=items, items_per_run_min=items_per_run_min, items_per_run_max=items_per_run_max,
                            repeat_times_min=repeat_times_min, repeat_times_max=repeat_times_max)
+
+
+
+# Define the route to handle the HID report generation
+@app.route('/generate_hid_report', methods=['POST'])
+def generate_hid_report():
+    
+    string = request.form['input_string']
+    print('waiting 3 seconds....')
+    time.sleep(3)
+    print(string)
+    for x in [*string]:
+        if int(x) == 0:
+                write_report(NULL_CHAR*2+chr(39)+NULL_CHAR*5)
+                write_report(NULL_CHAR*8)
+        else:
+                x = 29+int(x)
+                write_report(NULL_CHAR*2+chr(x)+NULL_CHAR*5)
+                write_report(NULL_CHAR*8)
+
+
+    write_report(NULL_CHAR*2+chr(40)+NULL_CHAR*5)
+    write_report(NULL_CHAR*8)
+    return jsonify({'message': 200})
+
 
 @app.route('/add_item', methods=['POST'])
 def add_item():
