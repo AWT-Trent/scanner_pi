@@ -48,3 +48,8 @@ ls /sys/class/udc > UDC
 -------------------------------------------------------------------------------
 
 
+sudo apt-get install pip git
+sudo python pip install flask
+git clone https://github.com/AWT-Trent/scanner_pi.git
+cd scanner_pi
+sudo python scanner_flask.py (will need to change the ip address it runs on, currently set to 192.168.1.72:5000) 
