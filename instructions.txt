@@ -4,20 +4,20 @@ pi@raspberrypi:~ $ echo "dwc2" | sudo tee -a /etc/modules
 pi@raspberrypi:~ $ sudo echo "libcomposite" | sudo tee -a /etc/modules
 
 Creating the config script
-The configuration is volatile, so it must run on each startup. Create a new file called isticktoit_usb in /usr/bin/ and make it executable:
+The configuration is volatile, so it must run on each startup. Create a new file called scanner_pi_usb in /usr/bin/ and make it executable:
 
-pi@raspberrypi:~ $ sudo touch /usr/bin/isticktoit_usb
-pi@raspberrypi:~ $ sudo chmod +x /usr/bin/isticktoit_usb
+pi@raspberrypi:~ $ sudo touch /usr/bin/scanner_pi_usb
+pi@raspberrypi:~ $ sudo chmod +x /usr/bin/scanner_pi_usb
 Then, you need to run this script automatically at startup. Open /etc/rc.local with this command:
 
 pi@raspberrypi:~ $ sudo nano /etc/rc.local
 Add the following before the line containing exit 0:
 
-/usr/bin/isticktoit_usb # libcomposite configuration
+/usr/bin/scanner_pi_usb # libcomposite configuration
 
 For this project, we will turn the Raspberry Pi into a USB keyboard, but you could make it work as a Serial adapter, Ethernet adapter, and Mass Storage. Open the file with:
 
-pi@raspberrypi:~ $ sudo nano /usr/bin/isticktoit_usb
+pi@raspberrypi:~ $ sudo nano /usr/bin/scanner_pi_usb
 ----------------------------------------------------------------
 #!/bin/bash
 cd /sys/kernel/config/usb_gadget/
