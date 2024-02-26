@@ -62,7 +62,7 @@ def index():
 def generate_hid_report():
     
     string = request.form['input_string']
-    print('waiting 3 seconds....')
+    print('waiting 3 seconds...')
     time.sleep(3)
     print(string)
     for x in [*string]:
