@@ -5,7 +5,7 @@ import sys
 
 app = Flask(__name__)
 args = [x.upper() for x in sys.argv]
-
+print(args)
 for arg in args:
     if "--HOST" in arg:
         index = args.index("--HOST")
