@@ -6,11 +6,13 @@ import sys
 app = Flask(__name__)
 args = [x.upper() for x in sys.argv]
 print(args)
-for arg in args:
-    if "--HOST" in arg:
-        index = args.index("--HOST")
-        host = args[index+1]
-
+try:
+    for arg in args:
+        if "--HOST" in arg:
+            index = args.index("--HOST")
+            host = args[index+1]
+except:
+    pass
 
 
 NULL_CHAR = chr(0)
@@ -114,4 +116,4 @@ if __name__ == '__main__':
     if host:
         app.run(debug=True,host=host)
     else:
-        app.run(debug=True)
+        app.run(debug=True,host="0.0.0.0")
