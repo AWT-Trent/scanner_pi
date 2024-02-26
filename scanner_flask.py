@@ -1,7 +1,17 @@
 from flask import Flask, render_template, request, jsonify
 import json
 import time
+import sys
+
 app = Flask(__name__)
+args = [x.upper() for x in sys.argv]
+
+for arg in args:
+    if "--HOST" in arg:
+        index = args.index("--HOST")
+        host = args[index+1]
+
+
 
 NULL_CHAR = chr(0)
 # Define the function to send the HID report
@@ -101,4 +111,7 @@ def save_repeat_times():
     return jsonify({'message': 'Settings saved successfully'})
 
 if __name__ == '__main__':
-    app.run(debug=True,host='192.168.1.72')
+    if host:
+        app.run(debug=True,host=host)
+    else:
+        app.run(debug=True)
