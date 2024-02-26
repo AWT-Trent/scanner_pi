@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify
 import json
 import time
 import sys
-
+host = ''
 app = Flask(__name__)
 args = [x.upper() for x in sys.argv]
 print(args)
