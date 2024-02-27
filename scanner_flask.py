@@ -3,21 +3,24 @@ import json
 import time
 import sys
 from configparser import ConfigParser
+import os
 config = ConfigParser()
 
 host = ''
 app = Flask(__name__)
 
-config.read('config.ini')
-config.add_section('main')
-config.set('main', 'key1', 'value1')
-config.set('main', 'key2', 'value2')
-config.set('main', 'key3', 'value3')
+if os.path.exists('config.ini') == False:
+    config.add_section('main')
+    
+    config.set('main', 'items_per_run_settings', '{"min":1,"max":5}')
+    config.set('main', 'repeat_times_settings', '{"min":1,"max":5}')
+    config.set('main','items','')
+    
 
-with open('config.ini', 'w') as f:
-    config.write(f)
-    
-    
+    with open('config.ini', 'w') as f:
+        config.write(f)
+           
+config.read('config.ini')  
 args = [x.upper() for x in sys.argv]
 print(args)
 try:
@@ -35,53 +38,41 @@ def write_report(report):
     with open('/dev/hidg0', 'rb+') as fd:
         fd.write(report.encode())
 
-def save_items(filename, items):
-    with open(filename, 'w') as f:
-        json.dump(items, f)
+def save_items(items):
+    while("" in items):
+        items.remove("")
+    config.set('main','items',",".join(items))
+    with open('config.ini', 'w') as f:
+        config.write(f)
 
-def load_items(filename):
-    try:
-        with open(filename, 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
+def load_items():
+    global items
+    items = config.get('main','items').split(',')
+    while("" in items):
+        items.remove("")
+    return items
 
-items_file = "items.json"
-items = load_items(items_file)
 
-def save_settings(filename, min_val, max_val):
-    app.config[filename] = (min_val,max_val)
+
+def save_settings(key, min_val, max_val):
+    values = {'min':min_val,'max':max_val}
+    config.set('main', key, json.dumps(values))
     
-    #with open(filename, 'w') as f:
-    #    f.write(f"{min_val},{max_val}")
+    with open('config.ini', 'w') as f:
+        config.write(f)
 
-def load_settings(filename):
-    try:
-        min_val = app.config[filename][0]
-        max_val = app.config[filename][1]
-        return min_val,max_val
+
+def load_settings(key):
+    values = json.loads(config.get('main',key))
+    return values['min'],values['max']
         
-        #with open(filename, 'r') as f:
-        #    min_val, max_val = map(int, f.read().split(","))
-        #    return min_val, max_val
-    except FileNotFoundError:
-        return 1, 5  # Default values
-try:
-    items_per_run_min, items_per_run_max = load_settings("items_per_run_settings")
-except:
-    save_settings("items_per_run_settings", 1, 5)
-    items_per_run_min, items_per_run_max = (1,5)
-try:
-    repeat_times_min, repeat_times_max = load_settings("repeat_times_settings")
-except:
-    save_settings("repeat_times_settings", 1, 5)
-    repeat_times_min, repeat_times_max = (1,5)
+
 
 @app.route('/')
 def index():
     items_per_run_min, items_per_run_max = load_settings("items_per_run_settings")
     repeat_times_min, repeat_times_max = load_settings("repeat_times_settings")
-    return render_template('index.html', items=items, items_per_run_min=items_per_run_min, items_per_run_max=items_per_run_max,
+    return render_template('index.html', items=load_items(), items_per_run_min=items_per_run_min, items_per_run_max=items_per_run_max,
                            repeat_times_min=repeat_times_min, repeat_times_max=repeat_times_max)
 
 
@@ -111,10 +102,10 @@ def generate_hid_report():
 
 @app.route('/add_item', methods=['POST'])
 def add_item():
-    global items
+    items = load_items()
     item = request.form['item']
     items.append(item)
-    save_items(items_file, items)
+    save_items(items)
     return jsonify({'message': 'Item added successfully'})
 
 @app.route('/remove_selected_items', methods=['POST'])
@@ -124,7 +115,7 @@ def remove_selected_items():
     indexes.sort(reverse=True)  # Remove items in reverse order to avoid index issues
     for index in indexes:
         del items[index]
-    save_items(items_file, items)
+    save_items(items)
     return jsonify({'message': 'Items removed successfully'})
 
 @app.route('/save_items_per_run', methods=['POST'])
