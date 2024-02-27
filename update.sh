@@ -7,3 +7,4 @@ cp -r ./scanner_pi /usr/bin/
 chmod +x /usr/bin/scanner_pi/scanner_pi_usb
 pip install -r ./scanner_pi/requirements.txt
 rm -r ./scanner_pi
+test
