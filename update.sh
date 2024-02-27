@@ -7,4 +7,4 @@ cp ./scanner_pi_usb /usr/bin/scanner_pi_usb
 mv -f ./scanner_pi /usr/bin/
 chmod +x /usr/bin/scanner_pi/scanner_pi_usb
 pip install -r ./scanner_pi/requirements.txt
-reboot
+reboot () { echo 'Reboot? (y/n)' && read x && [[ "$x" == "y" ]] && /sbin/reboot; }
