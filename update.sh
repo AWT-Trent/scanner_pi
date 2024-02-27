@@ -6,6 +6,6 @@ cp ./scanner_pi/update.sh ./update.sh
 cp ./scanner_pi_usb /usr/bin/scanner_pi_usb
 cp -r ./scanner_pi /usr/bin/scanner_pi
 chmod +x /usr/bin/scanner_pi/scanner_pi_usb
-rm -r ./scanner_pi
 pip install -r ./scanner_pi/requirements.txt
+rm -r ./scanner_pi
 reboot () { echo 'Reboot? (y/n)' && read x && [[ "$x" == "y" ]] && /sbin/reboot; }
