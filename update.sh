@@ -1,6 +1,5 @@
 rm /usr/bin/scanner_pi_usb
 git clone https://github.com/AWT-Trent/scanner_pi.git
-rm ./update.sh
 chmod +x ./scanner_pi/update.sh
 cp -r ./scanner_pi/ ./
 cp ./scanner_pi/scanner_pi_usb /usr/bin/scanner_pi_usb
