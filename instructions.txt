@@ -1,4 +1,4 @@
-sudo apt-get install git
+sudo apt-get install git -y
 git clone https://github.com/AWT-Trent/scanner_pi.git
 cd scanner_pi
 sudo sh setup.sh
