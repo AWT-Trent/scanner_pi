@@ -4,6 +4,7 @@ import time
 import sys
 from configparser import ConfigParser
 import os
+
 config = ConfigParser()
 
 host = ''
@@ -11,18 +12,20 @@ app = Flask(__name__)
 
 if os.path.exists('config.ini') == False:
     config.add_section('main')
-    
-    config.set('main', 'items_per_run_settings', '{"min":1,"max":5}')
-    config.set('main', 'repeat_times_settings', '{"min":1,"max":5}')
+    config.set('main','start_output_on_device_start','false')
+    config.set('main', 'upcs_to_select_settings', '0')
+    config.set('main', 'random_scans_per_day_settings', '{"min":1,"max":10}')
+    config.set('main', 'random_interval_settings', '{"min":1,"max":9999}')
     config.set('main','items','')
-    
 
     with open('config.ini', 'w') as f:
         config.write(f)
            
 config.read('config.ini')  
+
 args = [x.upper() for x in sys.argv]
 print(args)
+
 try:
     for arg in args:
         if "--HOST" in arg:
@@ -31,8 +34,8 @@ try:
 except:
     pass
 
-
 NULL_CHAR = chr(0)
+
 # Define the function to send the HID report
 def write_report(report):
     with open('/dev/hidg0', 'rb+') as fd:
@@ -52,61 +55,40 @@ def load_items():
         items.remove("")
     return items
 
-
-
-def save_settings(key, min_val, max_val):
-    values = {'min':min_val,'max':max_val}
-    config.set('main', key, json.dumps(values))
-    
-    with open('config.ini', 'w') as f:
-        config.write(f)
-
-
-def load_settings(key):
-    values = json.loads(config.get('main',key))
-    return values['min'],values['max']
-        
-
-
 @app.route('/')
 def index():
-    items_per_run_min, items_per_run_max = load_settings("items_per_run_settings")
-    repeat_times_min, repeat_times_max = load_settings("repeat_times_settings")
-    return render_template('index.html', items=load_items(), items_per_run_min=items_per_run_min, items_per_run_max=items_per_run_max,
-                           repeat_times_min=repeat_times_min, repeat_times_max=repeat_times_max)
-
-
+    start_output,upcs_to_select_min, random_scans_per_day_min, random_scans_per_day_max, random_interval_min, random_interval_max = load_settings()
+    return render_template('index.html', items=load_items(),start_output=start_output,upcs_to_select_min=upcs_to_select_min, random_scans_per_day_min=random_scans_per_day_min, random_scans_per_day_max=random_scans_per_day_max, random_interval_min=random_interval_min, random_interval_max=random_interval_max)
 
 # Define the route to handle the HID report generation
 @app.route('/generate_hid_report', methods=['POST'])
 def generate_hid_report():
-    
     string = request.form['input_string']
     print('waiting 3 seconds...')
     time.sleep(3)
     print(string)
     for x in [*string]:
         if int(x) == 0:
-                write_report(NULL_CHAR*2+chr(39)+NULL_CHAR*5)
-                write_report(NULL_CHAR*8)
+            write_report(NULL_CHAR*2+chr(39)+NULL_CHAR*5)
+            write_report(NULL_CHAR*8)
         else:
-                x = 29+int(x)
-                write_report(NULL_CHAR*2+chr(x)+NULL_CHAR*5)
-                write_report(NULL_CHAR*8)
-
+            x = 29+int(x)
+            write_report(NULL_CHAR*2+chr(x)+NULL_CHAR*5)
+            write_report(NULL_CHAR*8)
 
     write_report(NULL_CHAR*2+chr(40)+NULL_CHAR*5)
     write_report(NULL_CHAR*8)
     return jsonify({'message': 200})
 
-
 @app.route('/add_item', methods=['POST'])
 def add_item():
+    print('add_item')
     items = load_items()
-    item = request.form['item']
-    items.append(item)
+    items_to_add = request.form['items'].split(',')
+    print(items_to_add)
+    items.extend(items_to_add)
     save_items(items)
-    return jsonify({'message': 'Item added successfully'})
+    return jsonify({'message': 'Items added successfully'})
 
 @app.route('/remove_selected_items', methods=['POST'])
 def remove_selected_items():
@@ -118,22 +100,58 @@ def remove_selected_items():
     save_items(items)
     return jsonify({'message': 'Items removed successfully'})
 
-@app.route('/save_items_per_run', methods=['POST'])
-def save_items_per_run():
-    min_val = int(request.form['min'])
-    max_val = int(request.form['max'])
-    save_settings("items_per_run_settings", min_val, max_val)
+@app.route('/save_settings', methods=['POST'])
+def save_settings():
+    start_output = request.form['start_output']
+    print(start_output)
+    
+    print(type(start_output))
+    upcs_to_select_min = str(request.form['upcs_to_select_min'])
+    random_scans_per_day_min = str(request.form['random_scans_per_day_min'])
+    random_scans_per_day_max = str(request.form['random_scans_per_day_max'])
+    random_interval_min = str(request.form['random_interval_min'])
+    random_interval_max = str(request.form['random_interval_max'])
+    
+    config.set('main','start_output_on_device_start',start_output)
+    save_upcs_to_select_settings(upcs_to_select_min)
+    save_random_scans_per_day_settings(random_scans_per_day_min, random_scans_per_day_max)
+    save_random_interval_settings(random_interval_min, random_interval_max)
     return jsonify({'message': 'Settings saved successfully'})
 
-@app.route('/save_repeat_times', methods=['POST'])
-def save_repeat_times():
-    min_val = int(request.form['min'])
-    max_val = int(request.form['max'])
-    save_settings("repeat_times_settings", min_val, max_val)
-    return jsonify({'message': 'Settings saved successfully'})
+def save_upcs_to_select_settings(min_val):
+    config.set('main', 'upcs_to_select_settings', min_val)
+    with open('config.ini', 'w') as f:
+        config.write(f)
+
+def save_random_scans_per_day_settings(min_val, max_val):
+    values = {'min': min_val, 'max': max_val}
+    config.set('main', 'random_scans_per_day_settings', json.dumps(values))
+    with open('config.ini', 'w') as f:
+        config.write(f)
+
+def save_random_interval_settings(min_val, max_val):
+    values = {'min': min_val, 'max': max_val}
+    config.set('main', 'random_interval_settings', json.dumps(values))
+    with open('config.ini', 'w') as f:
+        config.write(f)
+
+def load_settings():
+    start_output = config.get('main','start_output_on_device_start')
+    if start_output == 'true':
+        start_output = True
+    else:
+        start_output = False
+    upcs_to_select_min = int(config.get('main', 'upcs_to_select_settings'))
+    random_scans_per_day_values = json.loads(config.get('main', 'random_scans_per_day_settings'))
+    random_interval_values = json.loads(config.get('main', 'random_interval_settings'))
+    random_scans_per_day_min = random_scans_per_day_values['min']
+    random_scans_per_day_max = random_scans_per_day_values['max']
+    random_interval_min = random_interval_values['min']
+    random_interval_max = random_interval_values['max']
+    return start_output,upcs_to_select_min, random_scans_per_day_min, random_scans_per_day_max, random_interval_min, random_interval_max
 
 if __name__ == '__main__':
     if host:
-        app.run(debug=True,host=host)
+        app.run(debug=True, host=host)
     else:
-        app.run(debug=True,host="0.0.0.0")
+        app.run(debug=True, host="0.0.0.0")
