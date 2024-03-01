@@ -164,7 +164,7 @@
         }
 
         function testButton() {
-            fetch('/test');
+            fetch('/test').then(getLogs()).then(location.reload());
 
 
         }
