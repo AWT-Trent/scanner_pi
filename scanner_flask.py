@@ -4,25 +4,33 @@ import time
 import sys
 from configparser import ConfigParser
 import os
+from datetime import datetime
+import random
 
 config = ConfigParser()
 
 host = ''
 app = Flask(__name__)
 
-if os.path.exists('config.ini') == False:
-    config.add_section('main')
-    config.set('main','start_output_on_device_start','false')
-    config.set('main', 'upcs_to_select_settings', '0')
-    config.set('main', 'random_scans_per_day_settings', '{"min":1,"max":10}')
-    config.set('main', 'random_interval_settings', '{"min":1,"max":9999}')
-    config.set('main','items','')
+def init_settings():
+    if os.path.exists('config.ini') == False:
+        config.add_section('main')
+        config.set('main','start_output_on_device_start','false')
+        config.set('main', 'upcs_to_select_settings', '0')
+        config.set('main', 'random_scans_per_day_settings', '{"min":"1","max":"10"}')
+        config.set('main', 'random_interval_settings', '{"min":"1","max":"9999"}')
+        config.set('main','items','')
 
-    with open('config.ini', 'w') as f:
-        config.write(f)
+        with open('config.ini', 'w') as f:
+            config.write(f)
+        
+        config.read('config.ini') 
            
-config.read('config.ini')  
-
+try:    
+    config.read('config.ini')  
+except:
+    init_settings()
+    
 args = [x.upper() for x in sys.argv]
 print(args)
 
@@ -35,6 +43,12 @@ except:
     pass
 
 NULL_CHAR = chr(0)
+
+def write_to_log(log):
+    if log:
+        log = f'{datetime.now()} {log}\n'
+    with open('log.log', 'a') as f:
+        f.write(log)
 
 # Define the function to send the HID report
 def write_report(report):
@@ -55,10 +69,53 @@ def load_items():
         items.remove("")
     return items
 
+def update_log():
+    try:
+        with open('log.log', 'r') as log_file:
+            logs = log_file.read()
+    except:
+        write_to_log('')
+        logs = ''
+    return(logs)
+
 @app.route('/')
 def index():
+    global logs
+    logs = update_log()
+    
     start_output,upcs_to_select_min, random_scans_per_day_min, random_scans_per_day_max, random_interval_min, random_interval_max = load_settings()
-    return render_template('index.html', items=load_items(),start_output=start_output,upcs_to_select_min=upcs_to_select_min, random_scans_per_day_min=random_scans_per_day_min, random_scans_per_day_max=random_scans_per_day_max, random_interval_min=random_interval_min, random_interval_max=random_interval_max)
+    return render_template('index.html', items=load_items(),logs=logs,start_output=start_output,upcs_to_select_min=upcs_to_select_min, random_scans_per_day_min=random_scans_per_day_min, random_scans_per_day_max=random_scans_per_day_max, random_interval_min=random_interval_min, random_interval_max=random_interval_max)
+
+
+@app.route('/get_logs')
+def get_logs():
+    with open('log.log', 'r') as log_file:
+        logs = log_file.read()
+    return jsonify({'logs': logs})
+
+@app.route('/clear_config',methods=['POST'])
+def clear_config():
+    global config
+    
+    os.remove('config.ini')
+    config = ConfigParser()
+    init_settings()
+    write_to_log('reset config')
+    get_logs()
+    
+    return jsonify({'message': 200})
+
+@app.route('/clear_log',methods=['POST'])
+def clear_log():
+    
+    try:
+        os.remove('log.log')
+    except:
+        pass
+    
+    write_to_log('')  
+    
+    return jsonify({'message': 200})
 
 # Define the route to handle the HID report generation
 @app.route('/generate_hid_report', methods=['POST'])
@@ -82,7 +139,7 @@ def generate_hid_report():
 
 @app.route('/add_item', methods=['POST'])
 def add_item():
-    print('add_item')
+    write_to_log('add_item')
     items = load_items()
     items_to_add = request.form['items'].split(',')
     print(items_to_add)
@@ -136,7 +193,13 @@ def save_random_interval_settings(min_val, max_val):
         config.write(f)
 
 def load_settings():
-    start_output = config.get('main','start_output_on_device_start')
+    config.read('config.ini') 
+    try:
+        start_output = config.get('main','start_output_on_device_start')
+    except:
+        init_settings()
+        start_output = config.get('main','start_output_on_device_start')
+    
     if start_output == 'true':
         start_output = True
     else:
@@ -149,6 +212,19 @@ def load_settings():
     random_interval_min = random_interval_values['min']
     random_interval_max = random_interval_values['max']
     return start_output,upcs_to_select_min, random_scans_per_day_min, random_scans_per_day_max, random_interval_min, random_interval_max
+
+@app.route('/test')
+def test():
+    selected_upcs = {}
+    random_scans = json.loads(config.get('main', 'random_scans_per_day_settings'))
+    upcs_to_select = config.get('main', 'upcs_to_select_settings')
+    for x in range(0,int(upcs_to_select)):
+        upcs = load_items()
+        upc = random.choice(upcs)
+        upcs.remove(upc)
+        selected_upcs[upc] = random.randint(int(random_scans['min']),int(random_scans['max']))
+    print(selected_upcs)    
+    return jsonify({'message': 'Settings saved successfully'})
 
 if __name__ == '__main__':
     if host:
