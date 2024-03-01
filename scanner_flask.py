@@ -223,7 +223,8 @@ def test():
         upc = random.choice(upcs)
         upcs.remove(upc)
         selected_upcs[upc] = random.randint(int(random_scans['min']),int(random_scans['max']))
-    print(selected_upcs)    
+    print(selected_upcs)
+    write_to_log(f'Selected barcodes and the selection limit value: {selected_upcs}')    
     return jsonify({'message': 'Settings saved successfully'})
 
 if __name__ == '__main__':
