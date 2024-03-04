@@ -51,6 +51,8 @@
     <button type="button" id="resetLog">Reset Log</button>
     <button type="button" id="testButton">Test</button>
     <button type="button" id="runStopButton">{% if is_running %}Stop{% else %}Run{% endif %}</button>
+    <br>
+    <button type="button" id="updateButton">Update Software</button>
 
     <script>
         document.getElementById("addItemButton").addEventListener("click", addItem);
@@ -61,6 +63,7 @@
         document.getElementById("resetLog").addEventListener("click",clearLogButton);
         document.getElementById("testButton").addEventListener("click",testButton);
         document.getElementById("runStopButton").addEventListener("click", toggleRunningState);
+        document.getElementById("updateButton").addEventListener("click", update_Script);
 
         function generateHIDReport() {
             var inputString = document.getElementById("inputString").value;
@@ -75,7 +78,11 @@
             });
         }
 
+        function update_Script() {
 
+            fetch('/update_script');
+
+        }
 
         function addItem() {
             var itemInput = document.getElementById("itemInput");

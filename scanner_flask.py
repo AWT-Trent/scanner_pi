@@ -9,6 +9,9 @@ import random
 from random import randint
 from threading import Thread
 import logging
+from subprocess import check_output
+
+
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
@@ -132,8 +135,12 @@ def task_daemon():
             update()
         #print('ran')
         time.sleep(1)
-        
-        
+
+@app.route('/update_script')        
+def update_script():
+    stdout = check_output(['./update.sh']).decode('utf-8')
+    return stdout
+            
 @app.route('/')
 def index():
     global logs
