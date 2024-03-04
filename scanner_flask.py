@@ -138,7 +138,7 @@ def task_daemon():
 
 @app.route('/update_script')        
 def update_script():
-    subprocess.call(['sh', './update.sh'])
+    subprocess.call(['sh', 'update.sh'])
     return jsonify({'message': 200})
             
 @app.route('/')
