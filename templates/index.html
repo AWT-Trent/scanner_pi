@@ -139,7 +139,7 @@
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
-            }).then(getLogs()).then(location.reload())
+            }).then(location.reload());
             
         }
 
@@ -151,7 +151,7 @@
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
-            }).then(getLogs()).then(location.reload());
+            });
         
             
             
@@ -164,7 +164,8 @@
         }
 
         function testButton() {
-            fetch('/test').then(getLogs()).then(location.reload());
+            fetch('/test')
+            location.reload();
 
 
         }
@@ -195,6 +196,9 @@
         window.onload = function() {
             refreshItemList();
         }
+
+        var intervalID = window.setInterval(getLogs, 200);
+
     </script>    
 </body>
 </html>
