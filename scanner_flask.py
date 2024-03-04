@@ -119,7 +119,7 @@ def task_daemon():
     while 1:
         update()
         #print('ran')
-        time.sleep(.1)
+        time.sleep(1)
         
         
 @app.route('/')
