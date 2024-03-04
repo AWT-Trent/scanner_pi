@@ -19,21 +19,21 @@ host = ''
 app = Flask(__name__)
 
 def init_settings():
-    if os.path.exists('config.ini') == False:
-        config.add_section('main')
-        config.set('main','start_output_on_device_start','false')
-        config.set('main', 'upcs_to_select_settings', '0')
-        config.set('main', 'random_scans_per_day_settings', '{"min":"1","max":"10"}')
-        config.set('main', 'random_interval_settings', '{"min":"1","max":"9999"}')
-        config.set('main','items','')
-        config.set('main','last_run_time','')
-        config.set('main','next_run_time','')
+    
+    config.add_section('main')
+    config.set('main','start_output_on_device_start','false')
+    config.set('main', 'upcs_to_select_settings', '0')
+    config.set('main', 'random_scans_per_day_settings', '{"min":"1","max":"10"}')
+    config.set('main', 'random_interval_settings', '{"min":"1","max":"9999"}')
+    config.set('main','items','')
+    config.set('main','last_run_time','')
+    config.set('main','next_run_time','')
 
-        with open('config.ini', 'w') as f:
-            config.write(f)
-        
-        config.read('config.ini') 
-           
+    with open('config.ini', 'w') as f:
+        config.write(f)
+    
+    config.read('config.ini') 
+    return()
 
     
 args = [x.upper() for x in sys.argv]
@@ -97,16 +97,14 @@ def update():
     next_run = config.get('main','next_run_time')
     if not last_run:
         last_run = datetime.now()
-        
+      
     if not next_run or datetime.strptime(next_run, '%Y-%m-%d %H:%M:%S.%f') < datetime.now():
         run()
-        
-        
         interval = json.loads(config.get('main', 'random_interval_settings'))
         interval['min'] = int(interval['min'])
         interval['max'] = int(interval['max'])
-        interval = randint(interval['min'],interval['max'])
-        print(interval)
+        interval = random.randint(interval['min'],interval['max'])
+        
         next_run_time = datetime.now() + timedelta(seconds=interval)
         print(f'Next run at {next_run_time}')
         config.set('main','last_run_time',str(datetime.now()))
@@ -116,12 +114,22 @@ def update():
         write_to_log(f'Task ran. Next runtime {next_run_time}')
     
 def task_daemon():
+    global is_running
     try:    
         config.read('config.ini')  
     except:
         init_settings()
+
+    if config.get('main','start_output_on_device_start') == 'true':
+       
+        is_running = 1
+    else:
+       
+        is_running = 0
+    
     while 1:
-        update()
+        if is_running == 1:
+            update()
         #print('ran')
         time.sleep(1)
         
@@ -129,11 +137,22 @@ def task_daemon():
 @app.route('/')
 def index():
     global logs
+    
     logs = update_log()
     
     start_output,upcs_to_select_min, random_scans_per_day_min, random_scans_per_day_max, random_interval_min, random_interval_max = load_settings()
-    return render_template('index.html', items=load_items(),logs=logs,start_output=start_output,upcs_to_select_min=upcs_to_select_min, random_scans_per_day_min=random_scans_per_day_min, random_scans_per_day_max=random_scans_per_day_max, random_interval_min=random_interval_min, random_interval_max=random_interval_max)
+    return render_template('index.html', is_running=is_running,items=load_items(),logs=logs,start_output=start_output,upcs_to_select_min=upcs_to_select_min, random_scans_per_day_min=random_scans_per_day_min, random_scans_per_day_max=random_scans_per_day_max, random_interval_min=random_interval_min, random_interval_max=random_interval_max)
 
+@app.route('/toggle_running', methods=['POST'])
+def toggle_running():
+    global is_running
+    is_running = 1 - is_running  # Toggle the value between 0 and 1
+    if is_running:
+        write_to_log('Started output')
+    else:
+        write_to_log('Stopped Output')
+    
+    return jsonify({'is_running': is_running})
 
 @app.route('/get_logs')
 def get_logs():
@@ -145,11 +164,14 @@ def get_logs():
 def clear_config():
     global config
     
-    os.remove('config.ini')
-    config = ConfigParser()
+
+    #config = ConfigParser()
+    config.clear()
+    with open('config.ini', 'w') as f:
+            config.write(f)
     init_settings()
     write_to_log('reset config')
-    get_logs()
+    
     
     return jsonify({'message': 200})
 

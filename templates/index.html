@@ -50,6 +50,7 @@
     <button type="button" id="resetConfig">Reset Config</button>
     <button type="button" id="resetLog">Reset Log</button>
     <button type="button" id="testButton">Test</button>
+    <button type="button" id="runStopButton">{% if is_running %}Stop{% else %}Run{% endif %}</button>
 
     <script>
         document.getElementById("addItemButton").addEventListener("click", addItem);
@@ -59,6 +60,7 @@
         document.getElementById("resetConfig").addEventListener("click",clearConfigButton);
         document.getElementById("resetLog").addEventListener("click",clearLogButton);
         document.getElementById("testButton").addEventListener("click",testButton);
+        document.getElementById("runStopButton").addEventListener("click", toggleRunningState);
 
         function generateHIDReport() {
             var inputString = document.getElementById("inputString").value;
@@ -131,6 +133,24 @@
             });
         }
         
+        function toggleRunningState() {
+            fetch('/toggle_running', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    // Change button text based on is_running value
+                    const button = document.getElementById("runStopButton");
+                    if (data.is_running) {
+                        button.textContent = "Stop";
+                    } else {
+                        button.textContent = "Run";
+                    }
+                }).then(location.reload())
+                .catch(error => {
+                    console.error('Error toggling running state:', error);
+                });
+        }
+
+
         function clearConfigButton() {
             //location.reload()
             fetch('/clear_config', {
