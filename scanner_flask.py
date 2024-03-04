@@ -138,7 +138,7 @@ def task_daemon():
 
 @app.route('/update_script')        
 def update_script():
-    stdout = check_output(['./update.sh']).decode('utf-8')
+    stdout = check_output(['sh update.sh']).decode('utf-8')
     return stdout
             
 @app.route('/')
