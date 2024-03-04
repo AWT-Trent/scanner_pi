@@ -88,9 +88,13 @@ def run():
 
 def update():
     config.read('config.ini')
+    try:
+        last_run = config.get('main','last_run_time')
+        next_run = config.get('main','next_run_time')
+    except:
+        init_settings()
     last_run = config.get('main','last_run_time')
     next_run = config.get('main','next_run_time')
-    
     if not last_run:
         last_run = datetime.now()
         
