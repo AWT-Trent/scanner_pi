@@ -9,7 +9,7 @@ import random
 from random import randint
 from threading import Thread
 import logging
-from subprocess import check_output
+import subprocess
 
 
 log = logging.getLogger('werkzeug')
@@ -138,8 +138,8 @@ def task_daemon():
 
 @app.route('/update_script')        
 def update_script():
-    stdout = check_output(['update.sh']).decode('utf-8')
-    return stdout
+    subprocess.call(['sh', './update.sh'])
+    return 
             
 @app.route('/')
 def index():
