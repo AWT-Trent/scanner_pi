@@ -58,6 +58,8 @@ def write_to_log(log):
     with open('log.log', 'a') as f:
         f.write(log)
 
+write_to_log('System started.')
+
 # Define the function to send the HID report
 def write_report(report):
     with open('/dev/hidg0', 'rb+') as fd:
