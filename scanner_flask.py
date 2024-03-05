@@ -327,7 +327,7 @@ def test():
     
     
     
-    if not daily_upc_data or daily_upc_data == {} or datetime.date(datetime.strptime(daily_upc_data['date'],'%Y-%m-%d')) != datetime.date(datetime.today()):
+    if not daily_upc_data or daily_upc_data == {} or datetime.date(datetime.strptime(daily_upc_data['date'],'%Y-%m-%d')) != datetime.date(datetime.today()) or len(daily_upc_data.keys()) == 1:
         write_to_log('Daily list expired. Creating new one')
         daily_upc_data = make_daily_list()
         write_to_log(daily_upc_data)
