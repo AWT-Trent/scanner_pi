@@ -151,7 +151,11 @@ def index():
     global logs
     
     logs = update_log()
-    
+    try:
+        is_running = is_running
+    except:
+        is_running = 0
+        
     start_output,upcs_to_select_min, random_scans_per_day_min, random_scans_per_day_max, random_interval_min, random_interval_max = load_settings()
     return render_template('index.html', is_running=is_running,items=load_items(),logs=logs,start_output=start_output,upcs_to_select_min=upcs_to_select_min, random_scans_per_day_min=random_scans_per_day_min, random_scans_per_day_max=random_scans_per_day_max, random_interval_min=random_interval_min, random_interval_max=random_interval_max)
 
