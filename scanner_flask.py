@@ -31,6 +31,7 @@ def init_settings():
     config.set('main','items','')
     config.set('main','last_run_time','')
     config.set('main','next_run_time','')
+    config.set('main','daily_upc_data','')
 
     with open('config.ini', 'w') as f:
         config.write(f)
@@ -89,7 +90,7 @@ def update_log():
     return(logs)
 
 def run():
-    print('task run')
+    test()
 
 def update():
     config.read('config.ini')
@@ -294,19 +295,67 @@ def load_settings():
     random_interval_max = random_interval_values['max']
     return start_output,upcs_to_select_min, random_scans_per_day_min, random_scans_per_day_max, random_interval_min, random_interval_max
 
-@app.route('/test')
-def test():
+def make_daily_list():
     selected_upcs = {}
     random_scans = json.loads(config.get('main', 'random_scans_per_day_settings'))
     upcs_to_select = config.get('main', 'upcs_to_select_settings')
+    
     for x in range(0,int(upcs_to_select)):
         upcs = load_items()
         upc = random.choice(upcs)
         upcs.remove(upc)
         selected_upcs[upc] = random.randint(int(random_scans['min']),int(random_scans['max']))
-    print(selected_upcs)
-    write_to_log(f'Selected barcodes and the selection limit value: {selected_upcs}')    
-    return jsonify({'message': 'Settings saved successfully'})
+        selected_upcs['date'] = str(datetime.date(datetime.today()))
+    
+    
+    config.set('main','daily_upc_data',json.dumps(selected_upcs))
+    with open('config.ini', 'w') as f:
+            config.write(f)
+    
+    write_to_log(f'Selected barcodes and the selection limit value: {selected_upcs}') 
+    return selected_upcs 
+
+@app.route('/test')
+def test():
+    
+    config.read('config.ini')
+    
+    daily_upc_data = config.get('main','daily_upc_data')
+    print(daily_upc_data)
+    if not daily_upc_data or daily_upc_data == '{}':
+        write_to_log('Daily list expired. Creating new one')
+        daily_upc_data = make_daily_list()
+        write_to_log(daily_upc_data)
+    
+    if isinstance(daily_upc_data,str):
+        daily_upc_data = json.loads(daily_upc_data)
+        
+    
+    
+    keys = []
+    random_index = random.randint(1,(len(daily_upc_data) - 1))
+
+    for x in range(random_index):
+        
+        
+        while 1:
+            res = random.choice(list(daily_upc_data.keys()))
+            if res != 'date':
+                break
+        
+        keys.append(res)
+        daily_upc_data[res] = daily_upc_data[res] - 1
+        if daily_upc_data[res] == 0:
+            del daily_upc_data[res]
+            
+    write_to_log(f'Selected upcs {keys}')        
+    write_to_log(daily_upc_data)      
+    config.set('main','daily_upc_data',json.dumps(daily_upc_data))
+    with open('config.ini', 'w') as f:
+            config.write(f)
+        
+    print(keys)
+    return
 
 if __name__ == '__main__':
     
