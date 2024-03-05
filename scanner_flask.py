@@ -327,7 +327,7 @@ def test():
     config.read('config.ini')
     
     daily_upc_data = config.get('main','daily_upc_data')
-    if isinstance(daily_upc_data,str):
+    if isinstance(daily_upc_data,str) and daily_upc_data != '':
         daily_upc_data = json.loads(daily_upc_data)
     
     
