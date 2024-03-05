@@ -138,6 +138,7 @@ def task_daemon():
 
 @app.route('/update_script')        
 def update_script():
+    write_to_log("updating system.....")
     subprocess.call(['sh', '/usr/bin/scanner_pi/update.sh'])
     return jsonify({'message': 200})
             
