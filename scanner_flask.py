@@ -322,14 +322,17 @@ def test():
     config.read('config.ini')
     
     daily_upc_data = config.get('main','daily_upc_data')
-    print(daily_upc_data)
-    if not daily_upc_data or daily_upc_data == '{}':
+    if isinstance(daily_upc_data,str):
+        daily_upc_data = json.loads(daily_upc_data)
+    
+    
+    
+    if not daily_upc_data or daily_upc_data == {} or datetime.date(datetime.strptime(daily_upc_data['date'],'%Y-%m-%d')) != datetime.date(datetime.today()):
         write_to_log('Daily list expired. Creating new one')
         daily_upc_data = make_daily_list()
         write_to_log(daily_upc_data)
     
-    if isinstance(daily_upc_data,str):
-        daily_upc_data = json.loads(daily_upc_data)
+    
         
     
     
