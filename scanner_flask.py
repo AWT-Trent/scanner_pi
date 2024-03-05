@@ -69,7 +69,7 @@ def write_report(report):
 def save_items(items):
     while("" in items):
         items.remove("")
-    items = list(dict.fromkeys(items))
+    items = list(dict.fromkeys(items)).sort()
     config.set('main','items',",".join(items))
     with open('config.ini', 'w') as f:
         config.write(f)
