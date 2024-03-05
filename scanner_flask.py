@@ -160,6 +160,7 @@ def toggle_running():
     is_running = 1 - is_running  # Toggle the value between 0 and 1
     if is_running:
         write_to_log('Started output')
+        update()
     else:
         write_to_log('Stopped Output')
     
