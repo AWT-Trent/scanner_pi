@@ -226,7 +226,7 @@ def generate_hid_report(string=None):
 
     write_report(NULL_CHAR*2+chr(40)+NULL_CHAR*5)
     write_report(NULL_CHAR*8)
-    return jsonify({'message': 200})
+    return 
 
 @app.route('/add_item', methods=['POST'])
 def add_item():
