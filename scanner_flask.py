@@ -91,7 +91,10 @@ def update_log():
     return(logs)
 
 def run():
-    test()
+    keys = test()
+    for key in keys:
+        generate_hid_report(key)
+        time.sleep(2)
 
 def update():
     config.read('config.ini')
@@ -206,8 +209,9 @@ def clear_log():
 
 # Define the route to handle the HID report generation
 @app.route('/generate_hid_report', methods=['POST'])
-def generate_hid_report():
-    string = request.form['input_string']
+def generate_hid_report(string=None):
+    if not string:
+        string = request.form['input_string']
     print('waiting 3 seconds...')
     time.sleep(3)
     print(string)
@@ -337,10 +341,6 @@ def test():
         daily_upc_data = make_daily_list()
         write_to_log(daily_upc_data)
     
-    
-        
-    
-    
     keys = []
     random_index = random.randint(1,(len(daily_upc_data) - 1))
 
@@ -364,7 +364,7 @@ def test():
             config.write(f)
         
     print(keys)
-    return
+    return(keys)
 
 if __name__ == '__main__':
     
