@@ -166,7 +166,11 @@ def index():
 @app.route('/toggle_running', methods=['POST'])
 def toggle_running():
     global is_running
-    is_running = 1 - is_running  # Toggle the value between 0 and 1
+    try:
+        is_running = 1 - is_running  # Toggle the value between 0 and 1
+    except:
+        is_running = 0
+    
     if is_running:
         write_to_log('Started output')
         update()
