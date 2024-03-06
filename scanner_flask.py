@@ -92,6 +92,7 @@ def update_log():
 
 def run():
     keys = test()
+    print(keys)
     for key in keys:
         generate_hid_report(key)
         time.sleep(2)
@@ -363,7 +364,7 @@ def test():
     with open('config.ini', 'w') as f:
             config.write(f)
         
-    print(keys)
+    
     return(keys)
 
 if __name__ == '__main__':
