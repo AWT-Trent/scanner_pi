@@ -198,7 +198,10 @@ def get_logs():
 def clear_config():
     global config
     
-    
+    #config = ConfigParser()
+    #config.clear()
+    #with open('config.ini', 'w') as f:
+    #S        config.write(f)
     init_settings()
     
     write_to_log('reset config')
