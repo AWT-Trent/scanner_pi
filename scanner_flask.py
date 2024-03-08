@@ -23,15 +23,22 @@ app = Flask(__name__)
 
 def init_settings():
     
-    config.add_section('main')
+    try:
+        config.add_section('main')
+    except:
+        pass
+    
     config.set('main','start_output_on_device_start','false')
     config.set('main', 'upcs_to_select_settings', '0')
     config.set('main', 'random_scans_per_day_settings', '{"min":"1","max":"10"}')
     config.set('main', 'random_interval_settings', '{"min":"1","max":"9999"}')
-    config.set('main','items','')
+    
     config.set('main','last_run_time','')
     config.set('main','next_run_time','')
     config.set('main','daily_upc_data','')
+    
+    if not os.path.exists('config.ini'):
+        config.set('main','items','')
 
     with open('config.ini', 'w') as f:
         config.write(f)
@@ -57,7 +64,7 @@ def write_to_log(log):
     if log:
         log = f'{datetime.now()} {log}\n'
     with open('log.log', 'a') as f:
-        f.write(log)
+        f.write(str(log))
 
 write_to_log('System started.')
 
@@ -126,18 +133,20 @@ def update():
     
 def task_daemon():
     global is_running
-    try:    
-        config.read('config.ini')  
+      
+    config.read('config.ini')  
+    
+    try:
+        if config.get('main','start_output_on_device_start') == 'true':
+        
+            is_running = 1
+        else:
+        
+            is_running = 0
     except:
         init_settings()
-
-    if config.get('main','start_output_on_device_start') == 'true':
-       
-        is_running = 1
-    else:
-       
         is_running = 0
-    
+        
     while 1:
         if is_running == 1:
             update()
@@ -189,12 +198,9 @@ def get_logs():
 def clear_config():
     global config
     
-
-    #config = ConfigParser()
-    config.clear()
-    with open('config.ini', 'w') as f:
-            config.write(f)
+    
     init_settings()
+    
     write_to_log('reset config')
     
     
