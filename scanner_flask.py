@@ -27,6 +27,7 @@ def init_settings():
         config.add_section('main')
     except:
         pass
+        
     
     config.set('main','start_output_on_device_start','false')
     config.set('main', 'upcs_to_select_settings', '0')
